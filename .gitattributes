@@ -33,3 +33,8 @@ saved_model/**/* filter=lfs diff=lfs merge=lfs -text
 *.zip filter=lfs diff=lfs merge=lfs -text
 *.zst filter=lfs diff=lfs merge=lfs -text
 *tfevents* filter=lfs diff=lfs merge=lfs -text
+vncorenlp filter=lfs diff=lfs merge=lfs -text
+pretrained-models/phobert.pt filter=lfs diff=lfs merge=lfs -text
+pretrained-models/ner-vietnamese-electra-base.pt filter=lfs diff=lfs merge=lfs -text
+pretrained-models/vncorenlp/models/postagger/vi-tagger filter=lfs diff=lfs merge=lfs -text
+pretrained-models/vncorenlp/VnCoreNLP-1.2.jar filter=lfs diff=lfs merge=lfs -text

@@ -43,14 +43,14 @@ class KeyBERTVi:
 dir_path = os.path.dirname(os.path.realpath(__file__))
 if __name__ == "__main__":
     # args
-    print(dir_path)
+    # print(dir_path)
 
     stopwords_file_path = f'{dir_path}/vietnamese-stopwords-dash.txt'
 
     text_file_path = sys.argv[1]
     with open(f'{dir_path}/{text_file_path}', 'r') as f:
         text = ' '.join([ln.strip() for ln in f.readlines()])
-        print(text)
+        # print(text)
 
     kw_model = KeyBERTVi(stopwords_file_path)
     title = None
