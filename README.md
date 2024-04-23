@@ -27,6 +27,8 @@ Inspired by [KeyBERT](https://github.com/MaartenGr/KeyBERT), KeyBERTVi implement
 This implementation took inspiration from the simple yet intuitive and powerful method of [KeyBERT](https://github.com/MaartenGr/KeyBERT/), applied for the Vietnamese language. PhoBERT are used to generate both document-level embeddings and word-level embeddings for extracted N-grams. Cosine similarity is then used to compute which N-grams are most similar to the document-level embedding, thus can be perceived as most representative of the document. 
 Preprocessing catered to the Vietnamese language was applied. 
 
+Test with your own documents at [KeyBERTVi Space](https://huggingface.co/spaces/tpha4308/keybertvi-app). 
+
 <a name="gettingstarted"/></a>
 ## 2. Getting Started
 <a name="installation"/></a>
@@ -47,6 +49,8 @@ You can use existing pre-trained models in the repo or download your own and put
   ner_model.eval()
   torch.save(ner_model, f'{dir_path}/pretrained-models/ner-vietnamese-electra-base.pt')
 ```
+
+**Note:** `dir_path` is the absolute path to the repo. 
 
 As [PhoBERT](https://huggingface.co/vinai/phobert-base) requires [VnCoreNLP](https://github.com/vncorenlp/VnCoreNLP) as part of pre-processing, the folder `pretrained-models/vncorenlp` is required. To download your own: 
 ```bash
