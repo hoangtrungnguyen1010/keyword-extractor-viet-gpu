@@ -1,20 +1,13 @@
 from string import punctuation
-import re
 
 
-def process_article_content(text):
+def process_text_pipeline(text):
     full_text_processed = replace_all(text.strip())
 
     while '\n\n' in full_text_processed:
         full_text_processed = full_text_processed.replace('\n\n', '\n')
 
     full_text_processed = process_sticking_sentences(full_text_processed)
-
-    pattern = "Ảnh: [A-ZĐÀÁÂÃÈÉÊẾÌÍÒÓÔÕÙÚĂĐĨŨƠƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỂỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪỬỮỰỲỴÝỶỸa-zđ][a-zàáâãèéêếìíòóôõùúăđĩũơưăạảấầẩẫậắằẳẵặẹẻẽềểễệỉịọỏốồổỗộớờởỡợụủứừửữựỳỵỷỹ]+ [A-ZĐÀÁÂÃÈÉÊẾÌÍÒÓÔÕÙÚĂĐĨŨƠƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỂỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪỬỮỰỲỴÝỶỸa-zđ][a-zàáâãèéêếìíòóôõùúăđĩũơưăạảấầẩẫậắằẳẵặẹẻẽềểễệỉịọỏốồổỗộớờởỡợụủứừửữựỳỵỷỹ]+\.?"
-    full_text_processed = re.sub(pattern, '', full_text_processed)
-
-    pattern = "Ảnh: [A-ZĐÀÁÂÃÈÉÊẾÌÍÒÓÔÕÙÚĂĐĨŨƠƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỂỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪỬỮỰỲỴÝỶỸ]+\.?"
-    full_text_processed = re.sub(pattern, '', full_text_processed)
 
     while '  ' in full_text_processed:
         full_text_processed = full_text_processed.replace('  ', ' ')

@@ -1,6 +1,4 @@
-# from transformers import AutoModelForTokenClassification, AutoTokenizer, pipeline
 from underthesea import sent_tokenize
-import torch
 
 
 def substring(w, ls):

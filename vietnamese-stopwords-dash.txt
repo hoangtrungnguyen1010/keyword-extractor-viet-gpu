@@ -868,7 +868,6 @@ ngày_xửa
 ngày_đến
 ngày_ấy
 ngôi
-ngôi_nhà
 ngôi_thứ
 ngõ_hầu
 ngăn_ngắt
@@ -1031,7 +1030,6 @@ năm
 năm_tháng
 nơi
 nơi_nơi
-nước
 nước_bài
 nước_cùng
 nước_lên
@@ -1988,3 +1986,13 @@ Hiện
 Hiện_tại
 hiện
 cạnh
+Xung_quanh
+tóm_lại
+Cho
+Sau_này
+Vào
+ngày_nay
+chung_quanh
+Qua
+Thông_qua
+bao_gồm
