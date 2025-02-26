@@ -11,16 +11,18 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 class KeywordExtractorPipeline(Pipeline):
-    def __init__(self, model, ner_model, **kwargs):
+    def __init__(self, model, ner_model, verbose = False, **kwargs):
         super().__init__(model, **kwargs)
         self.annotator = py_vncorenlp.VnCoreNLP(annotators=["wseg", "pos"],
                                                 save_dir=f'{dir_path}/pretrained-models/vncorenlp')
-
-        print("Loading PhoBERT tokenizer")
+        self.verbose = verbose
+        if self.verbose:
+            print("Loading PhoBERT tokenizer")
         self.phobert_tokenizer = AutoTokenizer.from_pretrained("vinai/phobert-base-v2")
         self.phobert = model.to(device)
 
-        print("Loading NER tokenizer")
+        if self.verbose:
+            print("Loading NER tokenizer")
         ner_tokenizer = AutoTokenizer.from_pretrained("NlpHUST/ner-vietnamese-electra-base")
         self.ner_pipeline = pipeline("ner", model=ner_model.to(device), tokenizer=ner_tokenizer, device=0 if torch.cuda.is_available() else -1)
 
@@ -63,7 +65,9 @@ class KeywordExtractorPipeline(Pipeline):
         doc_embedding = get_doc_embeddings(filtered_doc_segmentised, self.phobert_tokenizer, self.phobert, self.stopwords).to(device)
 
         ngram_list = self.generate_ngram_list(doc_segmentised, filtered_doc_segmentised, ne_ls, ngram_n, min_freq)
-        print("Final ngram list", sorted(ngram_list))
+        
+        if self.verbose:
+            print("Final ngram list", sorted(ngram_list))
 
         ngram_embeddings = compute_ngram_embeddings(self.phobert_tokenizer, self.phobert, ngram_list)
 
@@ -81,7 +85,7 @@ class KeywordExtractorPipeline(Pipeline):
             return diversify_result_kmeans(ngram_result, ngram_embeddings, top_n=top_n)
         return non_diversified
 
-    def generate_ngram_list(self, doc_segmentised, filtered_doc_segmentised, ne_ls, ngram_n, min_freq):
+    def generate_ngram_list(self, doc_segmentised, filtered_doc_segmentised, ne_ls, ngram_n, min_freq, verbose):
         ngram_low, ngram_high = ngram_n
 
         ngram_list = set()
@@ -89,7 +93,10 @@ class KeywordExtractorPipeline(Pipeline):
             ngram_list.update(get_candidate_ngrams(doc_segmentised, filtered_doc_segmentised, n, self.stopwords))
 
         ne_ls_segmented = [self.annotator.word_segment(ne)[0] for ne in ne_ls]
-        print("Named Entities list", ne_ls_segmented)
+        
+        if self.verbose:
+            print("Named Entities list", ne_ls_segmented)
+            
         ngram_list.update(ne_ls_segmented)
 
         ngram_list = remove_overlapping_ngrams(ngram_list)
