@@ -85,7 +85,7 @@ class KeywordExtractorPipeline(Pipeline):
             return diversify_result_kmeans(ngram_result, ngram_embeddings, top_n=top_n)
         return non_diversified
 
-    def generate_ngram_list(self, doc_segmentised, filtered_doc_segmentised, ne_ls, ngram_n, min_freq, verbose):
+    def generate_ngram_list(self, doc_segmentised, filtered_doc_segmentised, ne_ls, ngram_n, min_freq):
         ngram_low, ngram_high = ngram_n
 
         ngram_list = set()
