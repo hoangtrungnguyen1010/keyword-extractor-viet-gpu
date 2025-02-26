@@ -6,6 +6,7 @@ from model.named_entities import get_named_entities
 
 punctuation = [c for c in punctuation if c != "_"]
 punctuation += ["“", "–", ",", "…", "”", "–"]
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
 ethnicity_dict_map = {"H'Mông": "HMông",
@@ -96,7 +97,7 @@ def get_doc_embeddings(segmentised_doc, tokenizer, phobert, stopwords):
         sent_removed_stopwords = ' '.join([word for word in sentence.split() if word not in stopwords])
 
         sentence_embedding = tokenizer.encode(sent_removed_stopwords)
-        input_ids = torch.tensor([sentence_embedding])
+        input_ids = torch.tensor([sentence_embedding]).to(device)
         with torch.no_grad():
             features = phobert(input_ids)
 
@@ -136,7 +137,7 @@ def compute_ngram_embeddings(tokenizer, phobert, ngram_list):
         if ngram.isupper():
             ngram_copy = ngram.lower()
         word_embedding = tokenizer.encode(ngram_copy)
-        input_ids = torch.tensor([word_embedding])
+        input_ids = torch.tensor([word_embedding]).to(device)
         with torch.no_grad():
             word_features = phobert(input_ids)
 
@@ -145,14 +146,10 @@ def compute_ngram_embeddings(tokenizer, phobert, ngram_list):
 
 
 def compute_ngram_similarity(ngram_list, ngram_embeddings, doc_embedding):
-    ngram_similarity_dict = {}
-
-    for ngram in ngram_list:
-        similarity_score = cosine_similarity(ngram_embeddings[ngram], doc_embedding.T).flatten()[0]
-        # similarity_score = normalised_cosine_similarity(ngram_embeddings[ngram], doc_embedding.T).flatten()[0]
-        ngram_similarity_dict[ngram] = similarity_score
-
-    return ngram_similarity_dict
+    return {
+        ngram: cosine_similarity(ngram_embeddings[ngram].squeeze(), doc_embedding.squeeze()).flatten()[0]
+        for ngram in ngram_list
+    }
 
 
 def diversify_result_kmeans(ngram_result, ngram_embeddings, top_n=5):
@@ -258,3 +255,4 @@ def remove_overlapping_ngrams(ngram_list):
     for kw in to_remove:
         ngram_list.remove(kw)
     return ngram_list
+
