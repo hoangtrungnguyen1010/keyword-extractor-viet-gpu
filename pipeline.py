@@ -65,7 +65,7 @@ class KeywordExtractorPipeline(Pipeline):
         ngram_list = self.generate_ngram_list(doc_segmentised, filtered_doc_segmentised, ne_ls, ngram_n, min_freq)
         print("Final ngram list", sorted(ngram_list))
 
-        ngram_embeddings = compute_ngram_embeddings(self.phobert_tokenizer, self.phobert, ngram_list).to(device)
+        ngram_embeddings = compute_ngram_embeddings(self.phobert_tokenizer, self.phobert, ngram_list)
 
         return {"ngram_list": ngram_list, "ngram_embeddings": ngram_embeddings, "doc_embedding": doc_embedding}
 
