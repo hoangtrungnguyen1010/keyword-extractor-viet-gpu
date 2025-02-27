@@ -11,10 +11,10 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 class KeywordExtractorPipeline(Pipeline):
-    def __init__(self, model, ner_model, verbose = False, doc_devide_by = 1, ngram_devide_by =1, **kwargs):
+    def __init__(self, model, ner_model, verbose = False, doc_divide_by = 1, ngram_divide_by =1, **kwargs):
         super().__init__(model, **kwargs)
-        self.doc_devide_by = doc_devide_by
-        self.ngram_devide_by = ngram_devide_by
+        self.doc_divide_by = doc_divide_by
+        self.ngram_divide_by = ngram_divide_by
         self.annotator = py_vncorenlp.VnCoreNLP(annotators=["wseg", "pos"],
                                                 save_dir=f'{dir_path}/pretrained-models/vncorenlp')
         self.verbose = verbose
