@@ -3,6 +3,7 @@ import numpy as np
 import torch
 from sklearn.cluster import KMeans
 from model.named_entities import get_named_entities
+import math
 
 punctuation = [c for c in punctuation if c != "_"]
 punctuation += ["“", "–", ",", "…", "”", "–"]
@@ -89,25 +90,53 @@ def compute_ngram_list(segmentised_doc, ngram_n, stopwords_ls, subsentences=True
 def cosine_similarity(a, b):
     return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
 
+def get_doc_embeddings(segmentised_doc, tokenizer, phobert, stopwords, divide_by=1):
+    """
+    Compute document embeddings using PhoBERT in batch mode to optimize GPU usage.
 
-def get_doc_embeddings(segmentised_doc, tokenizer, phobert, stopwords):
-    doc_embedding = torch.zeros(size=(len(segmentised_doc), 768))
+    Args:
+        segmentised_doc (list): List of segmented sentences.
+        tokenizer: PhoBERT tokenizer.
+        phobert: Pretrained PhoBERT model.
+        stopwords (set): Set of stopwords to remove.
+        divide_by (int): Factor to control batch size.
 
-    for i, sentence in enumerate(segmentised_doc):
-        sent_removed_stopwords = ' '.join([word for word in sentence.split() if word not in stopwords])
+    Returns:
+        torch.Tensor: 768-dimensional document embedding.
+    """
 
-        sentence_embedding = tokenizer.encode(sent_removed_stopwords)
-        input_ids = torch.tensor([sentence_embedding]).to(device)
+    # Remove stopwords from each sentence
+    cleaned_sentences = [
+        " ".join([word for word in sentence.split() if word not in stopwords])
+        for sentence in segmentised_doc
+    ]
+
+    # Determine batch size (ensuring at least 1 sentence per batch)
+    batch_size = max(1, math.ceil(len(cleaned_sentences) / divide_by))
+
+    # Initialize tensor for embeddings
+    doc_embedding = torch.zeros(len(cleaned_sentences), 768).to(device)
+
+    # Process sentences in batches
+    for i in range(0, len(cleaned_sentences), batch_size):
+        batch_sentences = cleaned_sentences[i : i + batch_size]  
+
+        # Tokenize batch with padding/truncation
+        encoded_inputs = tokenizer(
+            batch_sentences, padding=True, truncation=True, return_tensors="pt"
+        ).to(device)
+
+        # Get embeddings from PhoBERT
         with torch.no_grad():
-            features = phobert(input_ids)
+            features = phobert(**encoded_inputs)
 
-        if i == 0:
-            doc_embedding[i, :] = 2 * features.pooler_output.flatten()
-        else:
-            doc_embedding[i, :] = features.pooler_output.flatten()
+        # Store embeddings
+        for k in range(features.pooler_output.size(0)):  
+            index = min(i + k, len(doc_embedding) - 1)  # Prevent out-of-bounds indexing
+            doc_embedding[index, :] = features.pooler_output[k] * (2 if i == 0 and k == 0 else 1)
 
-    return torch.mean(doc_embedding, axis=0)
-
+    # Compute final document embedding (average of sentence embeddings)
+    return torch.mean(doc_embedding, dim=0)
 
 def get_segmentised_doc(nlp, rdrsegmenter, title, doc):
     for i, j in ethnicity_dict_map.items():
@@ -129,19 +158,46 @@ def get_segmentised_doc(nlp, rdrsegmenter, title, doc):
     return ne_ls, segmentised_doc_ne
 
 
-def compute_ngram_embeddings(tokenizer, phobert, ngram_list):
+def compute_ngram_embeddings(tokenizer, phobert, ngram_list, divide_by=1):
+    """
+    Compute embeddings for multiple n-grams efficiently in batch mode.
+
+    Args:
+        tokenizer: PhoBERT tokenizer.
+        phobert: Pretrained PhoBERT model.
+        ngram_list (list): List of n-grams (phrases) to embed.
+        divide_by (int): Factor to control batch size.
+
+    Returns:
+        dict: Dictionary of {ngram: embedding}.
+    """
+
+    # Normalize n-grams (convert uppercase n-grams to lowercase)
+    cleaned_ngrams = [ngram.lower() if ngram.isupper() else ngram for ngram in ngram_list]
+
+    # Determine batch size
+    batch_size = max(1, math.ceil(len(cleaned_ngrams) / divide_by))
+
+    # Initialize dictionary to store embeddings
     ngram_embeddings = {}
 
-    for ngram in ngram_list:
-        ngram_copy = ngram
-        if ngram.isupper():
-            ngram_copy = ngram.lower()
-        word_embedding = tokenizer.encode(ngram_copy)
-        input_ids = torch.tensor([word_embedding]).to(device)
-        with torch.no_grad():
-            word_features = phobert(input_ids)
+    # Process n-grams in batches
+    for i in range(0, len(cleaned_ngrams), batch_size):
+        batch_ngrams = cleaned_ngrams[i : i + batch_size]  # Get a batch of n-grams
 
-        ngram_embeddings[ngram] = word_features.pooler_output
+        # Tokenize batch with padding/truncation
+        encoded_inputs = tokenizer(
+            batch_ngrams, padding=True, truncation=True, return_tensors="pt"
+        ).to(device)
+
+        # Get embeddings from PhoBERT
+        with torch.no_grad():
+            features = phobert(**encoded_inputs)
+
+        # Store embeddings
+        for k, ngram in enumerate(batch_ngrams):
+            ngram_embeddings[ngram] = features.pooler_output[k]
+
     return ngram_embeddings
 
 

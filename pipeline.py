@@ -11,8 +11,10 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 class KeywordExtractorPipeline(Pipeline):
-    def __init__(self, model, ner_model, verbose = False, **kwargs):
+    def __init__(self, model, ner_model, verbose = False, doc_devide_by = 1, ngram_devide_by =1, **kwargs):
         super().__init__(model, **kwargs)
+        self.doc_devide_by = doc_devide_by
+        self.ngram_devide_by = ngram_devide_by
         self.annotator = py_vncorenlp.VnCoreNLP(annotators=["wseg", "pos"],
                                                 save_dir=f'{dir_path}/pretrained-models/vncorenlp')
         self.verbose = verbose
@@ -62,14 +64,14 @@ class KeywordExtractorPipeline(Pipeline):
         ne_ls, doc_segmentised = get_segmentised_doc(self.ner_pipeline, self.annotator, title, text)
         filtered_doc_segmentised = compute_filtered_text(self.annotator, title, text)
 
-        doc_embedding = get_doc_embeddings(filtered_doc_segmentised, self.phobert_tokenizer, self.phobert, self.stopwords).to(device)
+        doc_embedding = get_doc_embeddings(filtered_doc_segmentised, self.phobert_tokenizer, self.phobert, self.stopwords, divide_by=self.doc_divide_by).to(device)
 
         ngram_list = self.generate_ngram_list(doc_segmentised, filtered_doc_segmentised, ne_ls, ngram_n, min_freq)
         
         if self.verbose:
             print("Final ngram list", sorted(ngram_list))
 
-        ngram_embeddings = compute_ngram_embeddings(self.phobert_tokenizer, self.phobert, ngram_list)
+        ngram_embeddings = compute_ngram_embeddings(self.phobert_tokenizer, self.phobert, ngram_list, divide_by=self.ngram_divide_by)
 
         return {"ngram_list": ngram_list, "ngram_embeddings": ngram_embeddings, "doc_embedding": doc_embedding}
 
