@@ -202,10 +202,33 @@ def compute_ngram_embeddings(tokenizer, phobert, ngram_list, divide_by=1):
 
 
 def compute_ngram_similarity(ngram_list, ngram_embeddings, doc_embedding):
-    return {
-        ngram: cosine_similarity(ngram_embeddings[ngram].squeeze(), doc_embedding.squeeze()).flatten()[0]
-        for ngram in ngram_list
-    }
+    """
+    Compute cosine similarity between document embedding and each n-gram embedding.
+
+    Args:
+        ngram_list (list): List of extracted n-grams.
+        ngram_embeddings (dict): Dictionary of {ngram: embedding}.
+        doc_embedding (torch.Tensor): Document embedding.
+
+    Returns:
+        dict: Dictionary of {ngram: similarity score}.
+    """
+    similarity_scores = {}
+
+    for ngram in ngram_list:
+        # Normalize case for consistent lookup
+        normalized_ngram = ngram.lower() if ngram.isupper() else ngram
+
+        if normalized_ngram in ngram_embeddings:  # ✅ Fix: Prevent KeyError
+            similarity = cosine_similarity(
+                ngram_embeddings[normalized_ngram].squeeze(),
+                doc_embedding.squeeze()
+            ).flatten()[0]
+            similarity_scores[ngram] = similarity
+        else:
+            print(f"⚠️ Warning: Missing embedding for n-gram '{ngram}'")
+
+    return similarity_scores
 
 
 def diversify_result_kmeans(ngram_result, ngram_embeddings, top_n=5):
